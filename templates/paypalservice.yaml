@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paypalservice
+spec:
+  selector:
+    matchLabels:
+      app: paypalservice
+  template:
+    metadata:
+      labels:
+        app: paypalservice
+    spec:
+      terminationGracePeriodSeconds: 5
+      containers:
+      - name: server
+        image: gcr.io/service-resource-api/new
+        ports:
+        - containerPort: 3090
+        env:
+        - name: PORT
+          value: "3090"
+        readinessProbe:
+          exec:
+            command: ["/bin/grpc_health_probe", "-addr=:50051"]
+        livenessProbe:
+          exec:
+            command: ["/bin/grpc_health_probe", "-addr=:50051"]
+        resources:
+          requests:
+            cpu: 100m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paypalservice
+spec:
+  type: ClusterIP
+  selector:
+    app: paypal
+  ports:
+  - name: grpc
+    port: 3090
+    targetPort: 3090
+
